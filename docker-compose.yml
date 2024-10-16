@@ -3,37 +3,26 @@ version: '3.8'
 services:
   frontend:
     build: ./frontend
+    #image: anrysys/anry-full-stack-next-frontend:latest
     ports:
       - '3000:3000'
     depends_on:
-      backend:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:3000 || exit 1"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
+      - backend
 
   backend:
     build: ./backend
+    #image: anrysys/anry-full-stack-next-backend:latest
     ports:
       - '4000:4000'
     depends_on:
-      db:
-        condition: service_healthy
+      - db
     environment:
       POSTGRES_PASSWORD: password
     command: >
       sh -c "
-        ./wait-for-it.sh db:5432 -- 
         ./migrations/apply_migrations.sh &&
         npm start
       "
-    healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:4000 || exit 1"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
 
   db:
     image: postgres:13
@@ -45,11 +34,6 @@ services:
       - '5432:5432'
     volumes:
       - pgdata:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
 
 volumes:
   pgdata:
